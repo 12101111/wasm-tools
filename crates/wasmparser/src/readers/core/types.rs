@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-use std::fmt::{self, Debug, Write};
-use std::slice;
+use ::alloc::{boxed::Box, string::String, vec::Vec};
+use ::core::fmt::{self, Debug, Write};
+use ::core::slice;
 
 use crate::limits::{
     MAX_WASM_FUNCTION_PARAMS, MAX_WASM_FUNCTION_RETURNS, MAX_WASM_STRUCT_FIELDS,
@@ -52,7 +53,7 @@ pub enum StorageType {
 
 // The size of `ValType` is performance sensitive.
 const _: () = {
-    assert!(std::mem::size_of::<ValType>() == 4);
+    assert!(::core::mem::size_of::<ValType>() == 4);
 };
 
 pub(crate) trait Inherits {
@@ -237,7 +238,7 @@ impl fmt::Display for ValType {
 pub struct RefType([u8; 3]);
 
 impl Debug for RefType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
         match (self.is_nullable(), self.heap_type()) {
             (true, HeapType::Any) => write!(f, "anyref"),
             (false, HeapType::Any) => write!(f, "(ref any)"),
@@ -915,7 +916,7 @@ impl Inherits for StructuralType {
 }
 
 impl Debug for FuncType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
         f.debug_struct("FuncType")
             .field("params", &self.params())
             .field("returns", &self.results())

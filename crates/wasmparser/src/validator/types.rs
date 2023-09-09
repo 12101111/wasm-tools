@@ -3,6 +3,7 @@
 use super::{
     component::{ComponentState, ExternKind},
     core::Module,
+    IndexMap, IndexSet,
 };
 use crate::validator::names::KebabString;
 use crate::{
@@ -10,18 +11,17 @@ use crate::{
     PrimitiveValType, RefType, Result, StructType, StructuralType, SubType, TableType, TypeRef,
     ValType,
 };
-use indexmap::{IndexMap, IndexSet};
-use std::collections::HashMap;
-use std::collections::HashSet;
-use std::ops::Index;
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::{
+use ::alloc::{boxed::Box, format, string::String, sync::Arc, vec::Vec};
+use ::core::ops::Index;
+use ::core::sync::atomic::{AtomicU64, Ordering};
+use ::core::{
     borrow::Borrow,
     hash::{Hash, Hasher},
     mem,
     ops::{Deref, DerefMut},
-    sync::Arc,
 };
+use hashbrown::HashMap;
+use hashbrown::HashSet;
 
 /// The maximum number of parameters in the canonical ABI that can be passed by value.
 ///
@@ -160,7 +160,7 @@ pub struct TypeId {
 // The size of `TypeId` was seen to have a large-ish impact in #844, so this
 // assert ensures that it stays relatively small.
 const _: () = {
-    assert!(std::mem::size_of::<TypeId>() <= 16);
+    assert!(::core::mem::size_of::<TypeId>() <= 16);
 };
 
 /// Metadata about a type and its transitive structure.

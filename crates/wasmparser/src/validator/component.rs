@@ -8,6 +8,7 @@ use super::{
         InstanceType, ModuleType, RecordType, Remapping, ResourceId, Type, TypeAlloc, TypeId,
         TypeList, VariantCase,
     },
+    IndexMap, IndexSet,
 };
 use crate::validator::names::{KebabName, KebabNameKind, KebabStr, KebabString};
 use crate::{
@@ -21,9 +22,12 @@ use crate::{
     InstantiationArgKind, MemoryType, RecGroup, Result, StructuralType, SubType, TableType,
     TypeBounds, ValType, WasmFeatures,
 };
-use indexmap::{map::Entry, IndexMap, IndexSet};
-use std::collections::{HashMap, HashSet};
-use std::mem;
+use ::alloc::{
+    borrow::ToOwned, boxed::Box, format, string::String, string::ToString, vec, vec::Vec,
+};
+use ::core::mem;
+use hashbrown::{HashMap, HashSet};
+use indexmap::map::Entry;
 
 fn to_kebab_str<'a>(s: &'a str, desc: &str, offset: usize) -> Result<&'a KebabStr> {
     match KebabStr::new(s) {
@@ -1575,8 +1579,10 @@ impl ComponentState {
     ) -> Result<ComponentFuncType> {
         let mut info = TypeInfo::new();
 
-        let mut set =
-            HashSet::with_capacity(std::cmp::max(ty.params.len(), ty.results.type_count()));
+        let mut set = HashSet::with_capacity_and_hasher(
+            ::core::cmp::max(ty.params.len(), ty.results.type_count()),
+            super::RandomState::new(),
+        );
 
         let params = ty
             .params
@@ -1659,7 +1665,7 @@ impl ComponentState {
         }
 
         let module_type_id = self.module_at(module_index, offset)?;
-        let mut args = IndexMap::new();
+        let mut args = IndexMap::default();
 
         // Populate the arguments
         for module_arg in module_args {
@@ -1724,7 +1730,7 @@ impl ComponentState {
         offset: usize,
     ) -> Result<TypeId> {
         let component_type_id = self.component_at(component_index, offset)?;
-        let mut args = IndexMap::new();
+        let mut args = IndexMap::default();
 
         // Populate the arguments
         for component_arg in component_args {
@@ -1947,7 +1953,7 @@ impl ComponentState {
         //
         // In debug mode, however, do a sanity check.
         if cfg!(debug_assertions) {
-            let mut free = IndexSet::new();
+            let mut free = IndexSet::default();
             for ty in exports.values() {
                 types.free_variables_component_entity(ty, &mut free);
             }
@@ -1993,9 +1999,9 @@ impl ComponentState {
         offset: usize,
     ) -> Result<TypeId> {
         let mut info = TypeInfo::new();
-        let mut inst_exports = IndexMap::new();
-        let mut explicit_resources = IndexMap::new();
-        let mut kebab_names = IndexSet::new();
+        let mut inst_exports = IndexMap::default();
+        let mut explicit_resources = IndexMap::default();
+        let mut kebab_names = IndexSet::default();
 
         // NB: It's intentional that this context is empty since no indices are
         // introduced in the bag-of-exports construct which means there's no
@@ -2136,7 +2142,7 @@ impl ComponentState {
         }
 
         let mut info = TypeInfo::new();
-        let mut inst_exports = IndexMap::new();
+        let mut inst_exports = IndexMap::default();
         for export in exports {
             match export.kind {
                 ExternalKind::Func => {
@@ -2398,7 +2404,7 @@ impl ComponentState {
         let pos_after_component = components.len() - (count as usize);
         if let Some(component) = components.get(pos_after_component) {
             if component.kind == ComponentKind::Component {
-                let mut free = IndexSet::new();
+                let mut free = IndexSet::default();
                 types.free_variables_type_id(ty, &mut free);
                 if !free.is_empty() {
                     bail!(
@@ -2480,7 +2486,8 @@ impl ComponentState {
         offset: usize,
     ) -> Result<ComponentDefinedType> {
         let mut info = TypeInfo::new();
-        let mut field_map = IndexMap::with_capacity(fields.len());
+        let mut field_map =
+            IndexMap::with_capacity_and_hasher(fields.len(), super::RandomState::new());
 
         if fields.is_empty() {
             bail!(offset, "record type must have at least one field");
@@ -2516,7 +2523,8 @@ impl ComponentState {
         offset: usize,
     ) -> Result<ComponentDefinedType> {
         let mut info = TypeInfo::new();
-        let mut case_map: IndexMap<KebabString, VariantCase> = IndexMap::with_capacity(cases.len());
+        let mut case_map: IndexMap<KebabString, VariantCase> =
+            IndexMap::with_capacity_and_hasher(cases.len(), super::RandomState::new());
 
         if cases.is_empty() {
             bail!(offset, "variant type must have at least one case");
@@ -2599,7 +2607,8 @@ impl ComponentState {
     }
 
     fn create_flags_type(&self, names: &[&str], offset: usize) -> Result<ComponentDefinedType> {
-        let mut names_set = IndexSet::with_capacity(names.len());
+        let mut names_set =
+            IndexSet::with_capacity_and_hasher(names.len(), super::RandomState::new());
 
         if names.is_empty() {
             bail!(offset, "flags must have at least one entry");
@@ -2631,7 +2640,7 @@ impl ComponentState {
             bail!(offset, "enum type must have at least one variant");
         }
 
-        let mut tags = IndexSet::with_capacity(cases.len());
+        let mut tags = IndexSet::with_capacity_and_hasher(cases.len(), super::RandomState::new());
 
         for tag in cases {
             let tag = to_kebab_str(tag, "enum tag", offset)?;
@@ -3081,9 +3090,9 @@ impl KebabNameContext {
 use self::append_only::*;
 
 mod append_only {
-    use indexmap::IndexMap;
-    use std::hash::Hash;
-    use std::ops::Deref;
+    use crate::validator::IndexMap;
+    use ::core::hash::Hash;
+    use ::core::ops::Deref;
 
     pub struct IndexMapAppendOnly<K, V>(IndexMap<K, V>);
 

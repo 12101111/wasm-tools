@@ -1,5 +1,6 @@
 use crate::{BinaryReader, Result, Subsection, Subsections};
-use std::ops::Range;
+use ::core::ops::Range;
+use ::alloc::vec::Vec;
 
 /// Parser for the dynamic linking `dylink.0` custom section.
 ///

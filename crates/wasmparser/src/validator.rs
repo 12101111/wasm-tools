@@ -17,9 +17,9 @@ use crate::{
     limits::*, BinaryReaderError, Encoding, FromReader, FunctionBody, HeapType, Parser, Payload,
     Result, SectionLimited, ValType, WASM_COMPONENT_VERSION, WASM_MODULE_VERSION,
 };
-use std::mem;
-use std::ops::Range;
-use std::sync::Arc;
+use ::alloc::{sync::Arc, vec::Vec};
+use ::core::mem;
+use ::core::ops::Range;
 
 /// Test whether the given buffer contains a valid WebAssembly module or component,
 /// analogous to [`WebAssembly.validate`][js] in the JS API.
@@ -58,6 +58,14 @@ use self::core::*;
 use self::types::{TypeAlloc, Types, TypesRef};
 pub use func::{FuncToValidate, FuncValidator, FuncValidatorAllocations};
 pub use operators::{Frame, FrameKind};
+
+#[cfg(feature = "std")]
+type RandomState = std::collections::hash_map::RandomState;
+#[cfg(not(feature = "std"))]
+type RandomState = ahash::RandomState;
+
+type IndexMap<K, V> = indexmap::IndexMap<K, V, RandomState>;
+type IndexSet<K> = indexmap::IndexSet<K, RandomState>;
 
 fn check_max(cur_len: usize, amt_added: u32, max: usize, desc: &str, offset: usize) -> Result<()> {
     if max
@@ -1259,7 +1267,7 @@ impl Validator {
     ///
     /// Returns the types known to the validator for the module or component.
     pub fn end(&mut self, offset: usize) -> Result<Types> {
-        match std::mem::replace(&mut self.state, State::End) {
+        match ::core::mem::replace(&mut self.state, State::End) {
             State::Unparsed(_) => Err(BinaryReaderError::new(
                 "cannot call `end` before a header has been parsed",
                 offset,

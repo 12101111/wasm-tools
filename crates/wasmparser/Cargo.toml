@@ -13,8 +13,18 @@ edition.workspace = true
 exclude = ["benches/*.wasm"]
 
 [dependencies]
-indexmap = { workspace = true }
-semver = { workspace = true }
+ahash = { version = "0.8", default-features = false, features = ['compile-time-rng']}
+indexmap = { version = "2.0", default-features = false }
+semver = { version = "1.0", default-features = false }
+
+[dependencies.hashbrown]
+version = '0.14'
+default-features = false
+features = ['ahash', 'inline-more']
+
+[features]
+default = ["std"]
+std = ["indexmap/std", "semver/std"]
 
 [dev-dependencies]
 anyhow = { workspace = true }

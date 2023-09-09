@@ -14,12 +14,13 @@
  */
 
 use crate::{limits::*, *};
-use std::convert::TryInto;
-use std::error::Error;
-use std::fmt;
-use std::marker;
-use std::ops::Range;
-use std::str;
+use ::alloc::{boxed::Box, string::String, string::ToString, vec::Vec};
+use ::core::convert::TryInto;
+use ::core::error::Error;
+use ::core::fmt;
+use ::core::marker;
+use ::core::ops::Range;
+use ::core::str;
 
 pub(crate) const WASM_MAGIC_NUMBER: &[u8; 4] = b"\0asm";
 
@@ -40,7 +41,7 @@ pub(crate) struct BinaryReaderErrorInner {
 }
 
 /// The result for `BinaryReader` operations.
-pub type Result<T, E = BinaryReaderError> = std::result::Result<T, E>;
+pub type Result<T, E = BinaryReaderError> = ::core::result::Result<T, E>;
 
 impl Error for BinaryReaderError {}
 

@@ -2,11 +2,12 @@
 //! component model.
 
 use crate::{ComponentExternName, Result};
+use ::core::borrow::Borrow;
+use ::core::fmt;
+use ::core::hash::{Hash, Hasher};
+use ::core::ops::Deref;
+use ::alloc::{borrow::ToOwned, string::String, string::ToString};
 use semver::Version;
-use std::borrow::Borrow;
-use std::fmt;
-use std::hash::{Hash, Hasher};
-use std::ops::Deref;
 
 /// Represents a kebab string slice used in validation.
 ///
@@ -36,7 +37,7 @@ impl KebabStr {
     pub(crate) fn new_unchecked<'a>(s: impl AsRef<str> + 'a) -> &'a Self {
         // Safety: `KebabStr` is a transparent wrapper around `str`
         // Therefore transmuting `&str` to `&KebabStr` is safe.
-        unsafe { std::mem::transmute::<_, &Self>(s.as_ref()) }
+        unsafe { ::core::mem::transmute::<_, &Self>(s.as_ref()) }
     }
 
     /// Gets the underlying string slice.

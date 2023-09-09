@@ -27,6 +27,10 @@
 //! the examples documented for [`Parser::parse`] or [`Parser::parse_all`].
 
 #![deny(missing_docs)]
+#![feature(error_in_core)]
+#![cfg_attr(not(feature = "std"), no_std)]
+
+extern crate alloc;
 
 /// A helper macro to conveniently iterate over all opcodes recognized by this
 /// crate. This can be used to work with either the [`Operator`] enumeration or
