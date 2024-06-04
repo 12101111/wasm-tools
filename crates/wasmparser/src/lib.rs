@@ -29,6 +29,7 @@
 #![deny(missing_docs)]
 #![no_std]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![feature(error_in_core)]
 
 extern crate alloc;
 #[cfg(feature = "std")]
