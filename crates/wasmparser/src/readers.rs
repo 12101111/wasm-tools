@@ -133,6 +133,11 @@ impl<'a, T> SectionLimited<'a, T> {
             iter: self.into_iter(),
         }
     }
+
+    /// Turns this section into a new section of type `U`.
+    pub fn into_type<U>(self) -> SectionLimited<'a, U> {
+        SectionLimited { reader: self.reader, count: self.count, _marker: marker::PhantomData }
+    }
 }
 
 impl<T> Clone for SectionLimited<'_, T> {
