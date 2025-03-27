@@ -69,6 +69,7 @@ pub trait ModuleArity {
     }
 }
 
+#[cfg(feature = "operator-reader")]
 impl BinaryReader<'_> {
     /// Read the next operator and compute its arity (param and result counts)
     pub fn operator_arity(&self, module: &impl ModuleArity) -> Result<(u32, u32)> {

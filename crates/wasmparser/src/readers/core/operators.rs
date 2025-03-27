@@ -265,6 +265,7 @@ impl<'a> OperatorsReader<'a> {
     }
 
     /// Reads an operator from the reader.
+    #[cfg(feature = "operator-reader")]
     pub fn read(&mut self) -> Result<Operator<'a>> {
         self.reader.read_operator()
     }
@@ -278,6 +279,7 @@ impl<'a> OperatorsReader<'a> {
     }
 
     /// Reads an operator with its offset.
+    #[cfg(feature = "operator-reader")]
     pub fn read_with_offset(&mut self) -> Result<(Operator<'a>, usize)> {
         let pos = self.reader.original_position();
         Ok((self.read()?, pos))
@@ -286,6 +288,7 @@ impl<'a> OperatorsReader<'a> {
     /// Visit a single operator with the specified [`VisitOperator`] instance.
     ///
     /// See [`BinaryReader::visit_operator`] for more information.
+    #[cfg(feature = "operator-reader")]
     pub fn visit_operator<T>(&mut self, visitor: &mut T) -> Result<<T as VisitOperator<'a>>::Output>
     where
         T: VisitOperator<'a>,
@@ -305,6 +308,7 @@ impl<'a> OperatorsReader<'a> {
     }
 }
 
+#[cfg(feature = "operator-reader")]
 impl<'a> IntoIterator for OperatorsReader<'a> {
     type Item = Result<Operator<'a>>;
     type IntoIter = OperatorsIterator<'a>;
@@ -343,6 +347,7 @@ pub struct OperatorsIterator<'a> {
     err: bool,
 }
 
+#[cfg(feature = "operator-reader")]
 impl<'a> Iterator for OperatorsIterator<'a> {
     type Item = Result<Operator<'a>>;
 
@@ -362,6 +367,7 @@ pub struct OperatorsIteratorWithOffsets<'a> {
     err: bool,
 }
 
+#[cfg(feature = "operator-reader")]
 impl<'a> Iterator for OperatorsIteratorWithOffsets<'a> {
     type Item = Result<(Operator<'a>, usize)>;
 

@@ -883,6 +883,7 @@ impl<'a> BinaryReader<'a> {
     /// }
     ///
     /// ```
+    #[cfg(feature = "operator-reader")]
     pub fn visit_operator<T>(&mut self, visitor: &mut T) -> Result<<T as VisitOperator<'a>>::Output>
     where
         T: VisitOperator<'a>,
@@ -1139,6 +1140,7 @@ impl<'a> BinaryReader<'a> {
         })
     }
 
+    #[cfg(feature = "operator-reader")]
     fn visit_0xfb_operator<T>(
         &mut self,
         pos: usize,
@@ -1298,6 +1300,7 @@ impl<'a> BinaryReader<'a> {
         })
     }
 
+    #[cfg(feature = "operator-reader")]
     fn visit_0xfc_operator<T>(
         &mut self,
         pos: usize,
@@ -1378,6 +1381,7 @@ impl<'a> BinaryReader<'a> {
         })
     }
 
+    #[cfg(feature = "operator-reader")]
     fn visit_0xfe_operator<T>(
         &mut self,
         pos: usize,
@@ -1573,6 +1577,7 @@ impl<'a> BinaryReader<'a> {
     ///
     /// If `BinaryReader` has less bytes remaining than required to parse
     /// the `Operator`.
+    #[cfg(feature = "operator-reader")]
     pub fn read_operator(&mut self) -> Result<Operator<'a>> {
         self.visit_operator(&mut OperatorFactory::new())
     }
@@ -1613,11 +1618,65 @@ impl<'a> BinaryReader<'a> {
         self.read_u32()
     }
 
+    #[cfg(feature = "operator-reader")]
     pub(crate) fn skip_const_expr(&mut self) -> Result<()> {
         // TODO add skip_operator() method and/or validate ConstExpr operators.
         loop {
             if let Operator::End = self.read_operator()? {
                 return Ok(());
+            }
+        }
+    }
+
+    #[cfg(not(feature = "operator-reader"))]
+    pub(crate) fn skip_const_expr(&mut self) -> Result<()> {
+        // TODO add skip_operator() method and/or validate ConstExpr operators.
+        let pos = self.original_position();
+        loop {
+            let code = self.read_u8()? as u8;
+            match code {
+                // end
+                0x0b => break Ok(()),
+                // global.get
+                0x23 => {
+                    self.read_var_u32()?;
+                }
+                // i32.const
+                0x41 => {
+                    self.read_var_i32()?;
+                }
+                // i64.const
+                0x42 => {
+                    self.read_var_i64()?;
+                }
+                // f32.const
+                0x43 => {
+                    self.read_f32()?;
+                }
+                // f64.const
+                0x44 => {
+                    self.read_f64()?;
+                }
+                // ref.null
+                0xd0 => {
+                    self.read_u8()?;
+                }
+                // ref.func
+                0xd2 => {
+                    self.read_var_u32()?;
+                }
+                // v128.const
+                0xfd => {
+                    let code = self.read_var_u32()?;
+                    if code == 0x0c {
+                        self.read_bytes(16)?;
+                    } else {
+                        bail!(pos, "invalid 0xfd constant subopcode: 0x{code:x}");
+                    }
+                }
+                _ => {
+                    bail!(pos, "invalid constant opcode: 0x{code:x}");
+                }
             }
         }
     }

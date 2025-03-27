@@ -61,10 +61,13 @@ hash-collections = [
 # even if `hash-collections` is enabled.
 prefer-btree-collections = []
 
+# Enable `visit_operator` and `for_each_visit_operator`
+operator-reader = []
+
 # A feature that enables validating WebAssembly files. This is enabled by
 # default but not required if you're only parsing a file, for example, as
 # opposed to validating all of its contents.
-validate = []
+validate = ['operator-reader']
 
 # Enable Serialize/Deserialize implementations for types in
 # `wasmparser::collections`
