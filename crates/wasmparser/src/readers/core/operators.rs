@@ -489,6 +489,7 @@ impl<'a> OperatorsReader<'a> {
     ///
     /// If `OperatorsReader` has less bytes remaining than required to parse
     /// the `Operator`, or if the input is malformed.
+    #[cfg(feature = "operator-reader")]
     pub fn read(&mut self) -> Result<Operator<'a>> {
         self.visit_operator(&mut OperatorFactory)
     }
@@ -539,6 +540,7 @@ impl<'a> OperatorsReader<'a> {
     /// }
     ///
     /// ```
+    #[cfg(feature = "operator-reader")]
     pub fn visit_operator<T>(&mut self, visitor: &mut T) -> Result<<T as VisitOperator<'a>>::Output>
     where
         T: VisitOperator<'a>,
@@ -550,6 +552,7 @@ impl<'a> OperatorsReader<'a> {
     }
 
     /// Reads an operator with its offset.
+    #[cfg(feature = "operator-reader")]
     pub fn read_with_offset(&mut self) -> Result<(Operator<'a>, usize)> {
         let pos = self.reader.original_position();
         Ok((self.read()?, pos))
@@ -563,6 +566,7 @@ impl<'a> OperatorsReader<'a> {
         }
     }
 
+    #[cfg(feature = "operator-reader")]
     pub(crate) fn skip_const_expr(&mut self) -> Result<()> {
         // TODO add skip_operator() method and/or validate ConstExpr operators.
         loop {
@@ -574,6 +578,59 @@ impl<'a> OperatorsReader<'a> {
                     );
                 }
                 return Ok(());
+            }
+        }
+    }
+
+    #[cfg(not(feature = "operator-reader"))]
+    pub(crate) fn skip_const_expr(&mut self) -> Result<()> {
+        // TODO add skip_operator() method and/or validate ConstExpr operators.
+        let pos = self.original_position();
+        loop {
+            let code = self.reader.read_u8()? as u8;
+            match code {
+                // end
+                0x0b => break Ok(()),
+                // global.get
+                0x23 => {
+                    self.reader.read_var_u32()?;
+                }
+                // i32.const
+                0x41 => {
+                    self.reader.read_var_i32()?;
+                }
+                // i64.const
+                0x42 => {
+                    self.reader.read_var_i64()?;
+                }
+                // f32.const
+                0x43 => {
+                    self.reader.read_f32()?;
+                }
+                // f64.const
+                0x44 => {
+                    self.reader.read_f64()?;
+                }
+                // ref.null
+                0xd0 => {
+                    self.reader.read_u8()?;
+                }
+                // ref.func
+                0xd2 => {
+                    self.reader.read_var_u32()?;
+                }
+                // v128.const
+                0xfd => {
+                    let code = self.reader.read_var_u32()?;
+                    if code == 0x0c {
+                        self.reader.read_bytes(16)?;
+                    } else {
+                        bail!(pos, "invalid 0xfd constant subopcode: 0x{code:x}");
+                    }
+                }
+                _ => {
+                    bail!(pos, "invalid constant opcode: 0x{code:x}");
+                }
             }
         }
     }
@@ -594,6 +651,7 @@ impl<'a> FrameStack for OperatorsReader<'a> {
     }
 }
 
+#[cfg(feature = "operator-reader")]
 impl<'a> IntoIterator for OperatorsReader<'a> {
     type Item = Result<Operator<'a>>;
     type IntoIter = OperatorsIterator<'a>;
@@ -640,6 +698,7 @@ impl<'a> OperatorsIterator<'a> {
     }
 }
 
+#[cfg(feature = "operator-reader")]
 impl<'a> Iterator for OperatorsIterator<'a> {
     type Item = Result<Operator<'a>>;
 
@@ -667,6 +726,7 @@ impl<'a> OperatorsIteratorWithOffsets<'a> {
     }
 }
 
+#[cfg(feature = "operator-reader")]
 impl<'a> Iterator for OperatorsIteratorWithOffsets<'a> {
     type Item = Result<(Operator<'a>, usize)>;
 
@@ -1084,6 +1144,7 @@ impl<'a, T: VisitOperator<'a>> VisitOperator<'a> for SingleFrameAdapter<'_, T> {
     crate::for_each_visit_operator!(define_passthrough_visit_operator);
 }
 
+#[cfg(feature = "operator-reader")]
 impl<'a> BinaryReader<'a> {
     /// Peeks at the next available `Operator`, given a borrowed `FrameStack`.
     ///
