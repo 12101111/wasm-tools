@@ -904,6 +904,7 @@ impl<'a> BinaryReader<'a> {
     ///
     /// See the documentation for [`OperatorsReader::visit_operator`] for a version that
     /// does not require the visitor to implement [`FrameStack`].
+    #[cfg(feature = "operator-reader")]
     pub fn visit_operator<T>(&mut self, visitor: &mut T) -> Result<<T as VisitOperator<'a>>::Output>
     where
         T: VisitOperator<'a> + FrameStack,
@@ -1207,6 +1208,7 @@ impl<'a> BinaryReader<'a> {
         })
     }
 
+    #[cfg(feature = "operator-reader")]
     fn visit_0xfb_operator<T>(
         &mut self,
         pos: usize,
@@ -1366,6 +1368,7 @@ impl<'a> BinaryReader<'a> {
         })
     }
 
+    #[cfg(feature = "operator-reader")]
     fn visit_0xfc_operator<T>(
         &mut self,
         pos: usize,
@@ -1763,6 +1766,7 @@ impl<'a> BinaryReader<'a> {
         })
     }
 
+    #[cfg(feature = "operator-reader")]
     fn visit_0xfe_operator<T>(
         &mut self,
         pos: usize,
