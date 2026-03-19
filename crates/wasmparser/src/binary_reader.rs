@@ -54,6 +54,7 @@ impl std::error::Error for BinaryReaderError {}
 #[cfg(all(not(feature = "std"), core_error))]
 impl core::error::Error for BinaryReaderError {}
 
+#[cfg(not(feature = "no_fmt"))]
 impl fmt::Display for BinaryReaderError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
@@ -62,6 +63,11 @@ impl fmt::Display for BinaryReaderError {
             self.inner.message, self.inner.offset
         )
     }
+}
+
+#[cfg(feature = "no_fmt")]
+impl fmt::Display for BinaryReaderError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { Ok(()) }
 }
 
 impl BinaryReaderError {
@@ -786,9 +792,7 @@ impl<'a> BinaryReader<'a> {
         let magic_number = self.read_bytes(4)?;
         if magic_number != WASM_MAGIC_NUMBER {
             return Err(BinaryReaderError::new(
-                format!(
-                    "magic header not detected: bad magic number - expected={WASM_MAGIC_NUMBER:#x?} actual={magic_number:#x?}"
-                ),
+                "magic header not detected: bad magic number",
                 self.original_position() - 4,
             ));
         }
@@ -1988,7 +1992,7 @@ impl<'a> BinaryReader<'a> {
             0 => Ok(Ordering::SeqCst),
             1 => Ok(Ordering::AcqRel),
             x => Err(BinaryReaderError::new(
-                &format!("invalid atomic consistency ordering {x}"),
+                "invalid atomic consistency ordering",
                 self.original_position() - 1,
             )),
         }

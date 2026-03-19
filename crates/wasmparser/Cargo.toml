@@ -67,6 +67,9 @@ operator-reader = []
 # Allow wasm module that missing code or data section
 allow-malformed-wasm = []
 
+# Disable content of BinaryReaderError
+no_fmt = []
+
 # A feature that enables validating WebAssembly files. This is enabled by
 # default but not required if you're only parsing a file, for example, as
 # opposed to validating all of its contents.
