@@ -709,7 +709,6 @@ impl Parser {
                 // that means we reached the end of the data since it's
                 // just a bunch of sections concatenated after the header.
                 if eof && reader.bytes_remaining() == 0 {
-                    self.check_function_code_counts(reader.original_position())?;
                     self.check_data_count(reader.original_position())?;
                     return Ok(Payload::End(reader.original_position()));
                 }
